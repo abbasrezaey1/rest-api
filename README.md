@@ -1,6 +1,4 @@
-# Neredataltics symfony rest api
-
-## Installation steps
+ ## Installation steps
 
 ### 1. Install the packages
 
@@ -25,8 +23,7 @@ php bin/console make:migration
 ### 4. Pulling data from API
 ```bash
 php bin/console app:pull-users-posts
-```
-![image](https://user-images.githubusercontent.com/16781160/218746947-2e06d31a-48ab-4fe9-b5b5-cab68bd797a8.png)
+``` 
 
 
 ## Run and access application
