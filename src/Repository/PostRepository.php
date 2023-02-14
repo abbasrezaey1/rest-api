@@ -4,6 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Post;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -21,46 +24,32 @@ class PostRepository extends ServiceEntityRepository
         parent::__construct($registry, Post::class);
     }
 
-    public function save(Post $entity, bool $flush = false): void
+    /**
+     * @param array $userIds
+     * @return float
+     * @throws Exception
+     */
+    public function getPostWordCountByUsers(array $userIds): float
     {
-        $this->getEntityManager()->persist($entity);
+        $conn = $this->getEntityManager()->getConnection();
 
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        $sql = "
+                SELECT 
+                   AVG(
+                       LENGTH(RTRIM(LTRIM(REPLACE(body,'  ', ' ')))) 
+                       - LENGTH(REPLACE(RTRIM(LTRIM(REPLACE(body, '  ', ' '))), ' ', '')) + 1
+                       ) AS average_word_count 
+                FROM post WHERE user_id IN (?);
+            ";
+
+        $resultSet = $conn->executeQuery(
+            $sql,
+            [$userIds],
+            [Connection::PARAM_INT_ARRAY],
+        );
+
+        $result = $resultSet->fetchAssociative();
+
+        return $result['average_word_count'];
     }
-
-    public function remove(Post $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-//    /**
-//     * @return Post[] Returns an array of Post objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('p.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Post
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }
